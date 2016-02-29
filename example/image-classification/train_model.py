@@ -74,6 +74,9 @@ def fit(args, network, data_loader):
         momentum           = 0.9,
         wd                 = 0.00001,
         initializer        = mx.init.Xavier(factor_type="in", magnitude=2.34),
+	#momentum = 0.9,
+	#wd = 0.0001,
+  	#initializer = mx.init.Xavier(rnd_type="gaussian", factor_type="in", magnitude=2.0),
         **model_args)
 
     model.fit(

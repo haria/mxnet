@@ -118,6 +118,14 @@ def proto2script(proto_file):
         if layer[i].type == 'Concat' or layer[i].type == 3:
             type_string = 'mx.symbol.Concat'
             need_flatten[name] = True
+        if layer[i].type == 'BatchNorm':
+            type_string = 'mx.symbol.BatchNorm' 
+            need_flatten[name] = True
+        if layer[i].type == 'Eltwise':
+            type_string = 'mx.symbol.ElementWiseSum' 
+            need_flatten[name] = True
+        if layer[i].type == 'Scale':
+            continue
         if type_string == '':
             raise Exception('Unknown Layer %s!' % layer[i].type)
 
@@ -128,16 +136,16 @@ def proto2script(proto_file):
             if len(bottom) == 1:
                 if need_flatten[mapping[bottom[0]]] and type_string == 'mx.symbol.FullyConnected':
                     flatten_name = "flatten_%d" % flatten_count
-                    symbol_string += "%s=mx.symbol.Flatten(name='%s', data=%s)\n" %\
+                    symbol_string += "    %s=mx.symbol.Flatten(name='%s', data=%s)\n" %\
                         (flatten_name, flatten_name, mapping[bottom[0]])
                     flatten_count += 1
                     need_flatten[flatten_name] = False
                     bottom[0] = flatten_name
                     mapping[bottom[0]] = bottom[0]
-                symbol_string += "%s = %s(name='%s', data=%s %s)\n" %\
+                symbol_string += "    %s = %s(name='%s', data=%s %s)\n" %\
                     (name, type_string, name, mapping[bottom[0]], param_string)
             else:
-                symbol_string += "%s = %s(name='%s', *[%s] %s)\n" %\
+                symbol_string += "    %s = %s(name='%s', *[%s] %s)\n" %\
                     (name, type_string, name, ','.join([mapping[x] for x in bottom]), param_string)
         for j in range(len(layer[i].top)):
             mapping[layer[i].top[j]] = name
@@ -152,13 +160,37 @@ def proto2symbol(proto_file):
     exec("ret = " + output_name)
     return ret
 
+def usage(argv):
+    print("python %s prototxt symbol_python num_classes training_flag=True"%argv[0])
+
 def main():
-    symbol_string, output_name = proto2script(sys.argv[1])
-    if len(sys.argv) > 2:
-        with open(sys.argv[2], 'w') as fout:
-            fout.write(symbol_string)
+    if len(sys.argv) <3:
+        print (usage(sys.argv))
+        exit(1)
+    prototxt=sys.argv[1]
+    symbol_pyout=sys.argv[2]
+    if not symbol_pyout.endswith(".py"):
+        symbol_pyout +=".py"
+    if not symbol_pyout.startswith("symbol_"):
+        symbol_pyout ="symbol_"+symbol_pyout
+    num_classes = sys.argv[3]
+    generate4Train=True
+    if len(sys.argv)>4:
+        generate4Train=int(sys.argv[4])
+    symbol_string, output_name = proto2script(prototxt)
+    head = "import mxnet as mx\n\ndef get_symbol(num_classes = %s):\n"%(num_classes)
+    foot = "fc%s = mx.symbol.FullyConnected(name='fc%s', data=flatten_0 , num_hidden=%s, no_bias=False)\n    \
+softmax = mx.symbol.SoftmaxOutput(data=fc%s, name='softmax')\n    \
+return softmax"%(num_classes,num_classes,num_classes,num_classes)
+    if generate4Train:
+        symbol_string='\n'.join(symbol_string.split("\n")[:-3])
+        symbol_string+='\n    '+foot
     else:
-        print(symbol_string)
+        symbol_string+='\n    return prob'
+    
+    with open(symbol_pyout, 'w') as fout:
+        fout.write(head)
+        fout.write(symbol_string)
 
 if __name__ == '__main__':
     main()
