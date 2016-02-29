@@ -1,6 +1,7 @@
 import mxnet as mx
 
 def get_symbol(num_classes = 89):
+    data = mx.symbol.Variable(name='data')
     conv1 = mx.symbol.Convolution(name='conv1', data=data , num_filter=64, pad=(3,3), kernel=(7,7), stride=(2,2), no_bias=False)
     bn_conv1 = mx.symbol.BatchNorm(name='bn_conv1', data=conv1 )
     conv1_relu = mx.symbol.Activation(name='conv1_relu', data=bn_conv1 , act_type='relu')

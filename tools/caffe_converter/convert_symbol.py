@@ -178,7 +178,7 @@ def main():
     if len(sys.argv)>4:
         generate4Train=int(sys.argv[4])
     symbol_string, output_name = proto2script(prototxt)
-    head = "import mxnet as mx\n\ndef get_symbol(num_classes = %s):\n"%(num_classes)
+    head = "import mxnet as mx\n\ndef get_symbol(num_classes = %s):\n    data = mx.symbol.Variable(name='data')\n"%(num_classes)
     foot = "fc%s = mx.symbol.FullyConnected(name='fc%s', data=flatten_0 , num_hidden=%s, no_bias=False)\n    \
 softmax = mx.symbol.SoftmaxOutput(data=fc%s, name='softmax')\n    \
 return softmax"%(num_classes,num_classes,num_classes,num_classes)
