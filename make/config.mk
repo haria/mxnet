@@ -19,7 +19,6 @@
 #---------------------
 # choice of compiler
 #--------------------
-
 export CC = gcc
 export CXX = g++
 export NVCC = nvcc
@@ -28,17 +27,17 @@ export NVCC = nvcc
 DEBUG = 0
 
 # the additional link flags you want to add
-ADD_LDFLAGS =
+ADD_LDFLAGS = -L/usr/local/cuda/lib64
 
 # the additional compile flags you want to add
-ADD_CFLAGS =
+ADD_CFLAGS = -I/usr/local/cuda/include
 
 #---------------------------------------------
 # matrix computation libraries for CPU/GPU
 #---------------------------------------------
 
 # whether use CUDA during compile
-USE_CUDA = 0
+USE_CUDA = 1
 
 # add the path to CUDA library to link and compile flag
 # if you have already add them to environment variable, leave it as NONE
@@ -46,7 +45,7 @@ USE_CUDA = 0
 USE_CUDA_PATH = NONE
 
 # whether use CuDNN R3 library
-USE_CUDNN = 0
+USE_CUDNN = 1
 
 # whether use cuda runtime compiling for writing kernels in native language (i.e. Python)
 USE_NVRTC = 0
