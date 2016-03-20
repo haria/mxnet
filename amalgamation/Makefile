@@ -15,7 +15,7 @@ endif
 .PHONY: all clean
 
 
-CFLAGS=-std=c++11 -Wno-unknown-pragmas -Wall
+CFLAGS=-std=c++11 -Wno-unknown-pragmas -Wall -I${JAVA_HOME}/include/ -I${JAVA_HOME}/include/linux/
 ifneq ($(MIN), 1)
 	CFLAGS+= -I${OPENBLAS_ROOT}
 	LDFLAGS+=-L${OPENBLAS_ROOT} -lopenblas
@@ -41,7 +41,7 @@ libmxnet_predict.a: mxnet_predict-all.o
 	ar rcs libmxnet_predict.a $+
 
 jni_libmxnet_predict.o: mxnet_predict-all.cc
-	${CXX} ${CFLAGS} -fPIC -o $@ -c jni/predictor.cc
+	${CXX} ${CFLAGS} -fPIC -o $@ -c jni/predictor.cc  --sysroot=${SYS_ROOT} -I ${INCLUDE}
 
 jni_libmxnet_predict.so: jni_libmxnet_predict.o
 	${CXX} ${CFLAGS} -shared -o $@ $(filter %.o %.a, $^) $(LDFLAGS)
