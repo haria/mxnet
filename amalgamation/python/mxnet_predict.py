@@ -44,6 +44,7 @@ def _load_lib():
     """Load libary by searching possible path."""
     lib_path = _find_lib_path()
     lib = ctypes.cdll.LoadLibrary(lib_path[0])
+    
     # DMatrix functions
     lib.MXGetLastError.restype = ctypes.c_char_p
     return lib

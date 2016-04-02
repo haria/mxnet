@@ -15,10 +15,10 @@ endif
 .PHONY: all clean
 
 
-CFLAGS=-std=c++11 -Wno-unknown-pragmas -Wall -I${JAVA_HOME}/include/ -I${JAVA_HOME}/include/linux/
+CFLAGS=-std=c++11 -Wno-unknown-pragmas -Wall -O3 -I${JAVA_HOME}/include/ -I${JAVA_HOME}/include/linux/
 ifneq ($(MIN), 1)
-	CFLAGS+= -I${OPENBLAS_ROOT}
-	LDFLAGS+=-L${OPENBLAS_ROOT} -lopenblas
+	CFLAGS+= -I${OPENBLAS_ROOT} -fopenmp
+	LDFLAGS+=-L${OPENBLAS_ROOT} -lopenblas -fopenmp
 endif
 
 
@@ -65,4 +65,4 @@ ${MXNET_ROOT}/lib/libmxnet_predict.so:  mxnet_predict-all.o
 	ls -alh $@
 
 clean:
-	rm -f *.d *.o
+	rm -f *.d *.o *.so *.a
