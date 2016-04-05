@@ -15,12 +15,13 @@ endif
 .PHONY: all clean
 
 
-CFLAGS=-std=c++11 -Wno-unknown-pragmas -Wall -I${JAVA_HOME}/include/ -I${JAVA_HOME}/include/linux/
+CFLAGS=-std=c++11 -O3 -fopenmp -Wno-unknown-pragmas -Wall -I${JAVA_HOME}/include/ -I${JAVA_HOME}/include/linux/
 ifneq ($(MIN), 1)
-	CFLAGS+= -I${OPENBLAS_ROOT}
-	LDFLAGS+=-L${OPENBLAS_ROOT} -lopenblas
+	CFLAGS+= -I${OPENBLAS_ROOT} -mhard-float -D_NDK_MATH_NO_SOFTFP=1
+	LDFLAGS+=-L${OPENBLAS_ROOT} -Wl,--no-warn-mismatch -lm_hard -lopenblas 
+    #CFLAGS+= -I${OPENBLAS_ROOT}
+	#LDFLAGS+=-L${OPENBLAS_ROOT} -lopenblas 
 endif
-
 
 all: android libmxnet_predict.a ${MXNET_ROOT}/lib/libmxnet_predict.so
 
