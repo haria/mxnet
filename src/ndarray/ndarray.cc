@@ -522,7 +522,8 @@ NDArray &NDArray::operator/=(const real_t &src) {
  * \param size size after broadcasting
  */
 void Broadcast(const NDArray& src, int dim, int size, NDArray *out) {
-  CHECK(0 <= dim && dim < src.shape().ndim()) << "Broadcast dimension out of bound.";
+  CHECK(0 <= dim && dim < static_cast<int>(src.shape().ndim()))
+      << "Broadcast dimension out of bound.";
   CHECK(src.shape()[dim] == 1) << "Cannot broadcast a dimension that is not 1.";
   TShape new_shape = src.shape();
   new_shape[dim] = size;
@@ -535,14 +536,9 @@ void Broadcast(const NDArray& src, int dim, int size, NDArray *out) {
   }
   std::vector<Engine::VarHandle> const_vars;
   const_vars.push_back(src.var());
-  size_t before = 1;
-  size_t after = 1;
-  for (index_t i = 0; i < dim; ++i) {
-    before *= src.shape()[i];
-  }
-  for (index_t i = dim + 1; i < src.shape().ndim(); ++i) {
-    after *= src.shape()[i];
-  }
+  size_t before = src.shape().ProdShape(0, dim);
+  size_t after = src.shape().ProdShape(dim + 1, src.shape().ndim());
+
   // important: callback must always capture by value
   NDArray ret = *out;
   switch (src.ctx().dev_mask()) {
@@ -723,11 +719,6 @@ void NDArray::SyncCopyToCPU(void *data, size_t size) const {
 // those with underscore will be registered at NDArray
 MXNET_REGISTER_NDARRAY_FUN(_set_value).set_function(SetValueOp);
 
-
-MXNET_REGISTER_NDARRAY_FUN(_plus).set_function(BinaryOp<ndarray::Plus>);
-MXNET_REGISTER_NDARRAY_FUN(_minus).set_function(BinaryOp<ndarray::Minus>);
-MXNET_REGISTER_NDARRAY_FUN(_mul).set_function(BinaryOp<ndarray::Mul>);
-MXNET_REGISTER_NDARRAY_FUN(_div).set_function(BinaryOp<ndarray::Div>);
 
 MXNET_REGISTER_NDARRAY_FUN(dot).set_function(BinaryOp<ndarray::Dot>)
 .describe("Calculate 2D matrix multiplication");
