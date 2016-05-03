@@ -32,6 +32,7 @@
 doc/html
 doc/latex
 doc/doc
+docs/web-data
 
 *.pyc
 .Rhistory
@@ -100,3 +101,4 @@ scala-package/*/*/target/
 *.classpath
 *.project
 *.settings
+

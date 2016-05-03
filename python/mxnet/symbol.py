@@ -8,6 +8,7 @@ import ctypes
 from numbers import Number
 import sys
 import numpy
+import re
 from .base import _LIB
 from .base import c_array, c_str, mx_uint, py_str, string_types, mx_real_t
 from .base import NDArrayHandle, ExecutorHandle, SymbolHandle
@@ -17,7 +18,7 @@ from .attribute import AttrScope
 from .context import Context
 from .ndarray import NDArray, zeros, _DTYPE_NP_TO_MX, _DTYPE_MX_TO_NP
 from .executor import Executor
-
+from .symbol_doc import SymbolDoc
 
 class Symbol(object):
     """Symbol is symbolic graph of the mxnet."""
@@ -54,7 +55,7 @@ class Symbol(object):
 
     def __rsub__(self, other):
         if isinstance(other, Number):
-            return Symbol._MinusScalar(self, scalar=other, scalar_on_left=True)
+            return Symbol._RMinusScalar(self, scalar=other)
         else:
             raise TypeError('type %s not supported' % str(type(other)))
 
@@ -79,7 +80,7 @@ class Symbol(object):
 
     def __rdiv__(self, other):
         if isinstance(other, Number):
-            return Symbol._DivScalar(self, scalar=other, scalar_on_left=True)
+            return Symbol._RDivScalar(self, scalar=other)
         else:
             raise TypeError('type %s not supported' % str(type(other)))
 
@@ -959,7 +960,6 @@ def _make_atomic_symbol_function(handle):
     param_str = ctypes2docstring(num_args, arg_names, arg_types, arg_descs)
     key_var_num_args = py_str(key_var_num_args.value)
     func_name = py_str(name.value)
-
     desc = py_str(desc.value)
     if key_var_num_args:
         desc += '\nThis function support variable length of positional input.'
@@ -972,7 +972,9 @@ def _make_atomic_symbol_function(handle):
                'symbol: Symbol\n'+
                '    The result symbol.')
     doc_str = doc_str % (desc, param_str)
-
+    extra_doc = "\n" + '\n'.join([x.__doc__ for x in type.__subclasses__(SymbolDoc)
+                                  if x.__name__ == '%sDoc' % func_name])
+    doc_str += re.sub(re.compile("    "), "", extra_doc)
     def creator(*args, **kwargs):
         """Activation Operator of Neural Net.
         The parameters listed below can be passed in as keyword arguments.
@@ -1073,7 +1075,7 @@ def pow(base, exp):
     if  isinstance(base, Symbol) and isinstance(exp, Number):
         return Symbol._PowerScalar(base, scalar=exp)
     if  isinstance(base, Number) and isinstance(exp, Symbol):
-        return Symbol._PowerScalar(exp, scalar=base, scalar_on_left=True)
+        return Symbol._RPowerScalar(exp, scalar=base)
     if  isinstance(base, Number) and isinstance(exp, Number):
         return base**exp
     else:
@@ -1099,7 +1101,7 @@ def maximum(left, right):
     if  isinstance(left, Symbol) and isinstance(right, Number):
         return Symbol._MaximumScalar(left, scalar=right)
     if  isinstance(left, Number) and isinstance(right, Symbol):
-        return Symbol._MaximumScalar(right, scalar=left, scalar_on_left=True)
+        return Symbol._MaximumScalar(right, scalar=left)
     if  isinstance(left, Number) and isinstance(right, Number):
         return left if left > right else right
     else:
@@ -1124,9 +1126,8 @@ def minimum(left, right):
     if  isinstance(left, Symbol) and isinstance(right, Number):
         return Symbol._MinimumScalar(left, scalar=right)
     if  isinstance(left, Number) and isinstance(right, Symbol):
-        return Symbol._MinimumScalar(right, scalar=left, scalar_on_left=True)
+        return Symbol._MinimumScalar(right, scalar=left)
     if  isinstance(left, Number) and isinstance(right, Number):
         return left if left > right else right
     else:
         raise TypeError('types (%s, %s) not supported' % (str(type(left)), str(type(right))))
-
