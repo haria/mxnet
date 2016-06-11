@@ -16,8 +16,8 @@ endif
 
 CFLAGS=-std=c++11 -O3 -fopenmp -Wno-unknown-pragmas -Wall -I${JAVA_HOME}/include/ -I${JAVA_HOME}/include/linux/
 ifneq ($(MIN), 1)
-	CFLAGS+= -I${OPENBLAS_ROOT} -mhard-float -D_NDK_MATH_NO_SOFTFP=1
-	LDFLAGS+=-L${OPENBLAS_ROOT} -Wl,--no-warn-mismatch -lm_hard -lopenblas 
+	CFLAGS+= -I${OPENBLAS_ROOT}/include
+	LDFLAGS+=-L${OPENBLAS_ROOT}/lib -lopenblas
 endif
 
 all: android libmxnet_predict.a ${MXNET_ROOT}/lib/libmxnet_predict.so
@@ -25,12 +25,13 @@ all: android libmxnet_predict.a ${MXNET_ROOT}/lib/libmxnet_predict.so
 mxnet_predict0.d: mxnet_predict0.cc
 	${CXX} ${CFLAGS} -MD -MF $@ \
 	-I ${MXNET_ROOT}/ -I ${MXNET_ROOT}/mshadow/ -I ${MXNET_ROOT}/dmlc-core/include \
-	-I ${MXNET_ROOT}/include -c $+
+	-I ${MXNET_ROOT}/include \
+	-D__MIN__=$(MIN) -c $+
 	rm mxnet_predict0.o
 
 mxnet_predict-all.cc:  mxnet_predict0.d mxnet_predict0.cc
 	@echo "Generating amalgamation to " $@
-	python ./amalgamation.py $+ $@ $(MIN)
+	python ./amalgamation.py $+ $@ $(MIN) $(ANDROID)
 
 mxnet_predict-all.o: mxnet_predict-all.cc
 	${CXX} ${CFLAGS} -fPIC -o $@ -c $+
@@ -54,7 +55,9 @@ else
 endif
 
 libmxnet_predict.js: mxnet_predict-all.cc
-	emcc -std=c++11 -O2 -D__MXNET_JS__  -o $@ $+ -s EXPORTED_FUNCTIONS="['_MXPredCreate', '_MXPredGetOutputShape', '_MXPredSetInput', '_MXPredForward', '_MXPredPartialForward', '_MXPredGetOutput', '_MXPredFree', '_MXNDListCreate', '_MXNDListGet', '_MXNDListFree']" -s ALLOW_MEMORY_GROWTH=1
+	emcc -std=c++11 -O2 -D__MXNET_JS__  -o $@ $+ \
+	-s EXPORTED_FUNCTIONS="['_MXPredCreate', '_MXPredGetOutputShape', '_MXPredSetInput', '_MXPredForward', '_MXPredPartialForward', '_MXPredGetOutput', '_MXPredFree', '_MXNDListCreate', '_MXNDListGet', '_MXNDListFree']" \
+	-s ALLOW_MEMORY_GROWTH=1
 
 
 ${MXNET_ROOT}/lib/libmxnet_predict.so:  mxnet_predict-all.o
