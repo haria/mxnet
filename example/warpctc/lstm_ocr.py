@@ -129,7 +129,7 @@ if __name__ == '__main__':
     momentum = 0.9
     num_label = 4
 
-    contexts = [mx.context.gpu(1)]
+    contexts = [mx.context.gpu(0)]
 
     def sym_gen(seq_len):
         return lstm_unroll(num_lstm_layer, seq_len,

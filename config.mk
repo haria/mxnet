@@ -28,10 +28,10 @@ export NVCC = nvcc
 DEBUG = 0
 
 # the additional link flags you want to add
-ADD_LDFLAGS = -L/usr/local/cuda/lib64/
+ADD_LDFLAGS = -L/usr/local/cuda/lib64
 
 # the additional compile flags you want to add
-ADD_CFLAGS = -I/usr/local/cuda/include/
+ADD_CFLAGS = -I/usr/local/cuda/include
 
 #---------------------------------------------
 # matrix computation libraries for CPU/GPU
@@ -112,8 +112,12 @@ EXTRA_OPERATORS =
 #----------------------------
 
 # whether to use torch integration. This requires installing torch.
+# You also need to add TORCH_PATH/install/lib to your LD_LIBRARY_PATH
 # TORCH_PATH = $(HOME)/torch
 # MXNET_PLUGINS += plugin/torch/torch.mk
+
+WARPCTC_PATH = $(HOME)/warp-ctc
+MXNET_PLUGINS += plugin/warpctc/warpctc.mk
 
 # whether to use sframe integration. This requires build sframe
 # git@github.com:dato-code/SFrame.git
