@@ -1,5 +1,5 @@
 git pull 
-git pull upstream
+git pull upstream master
 git merge upstream/master
 git submodule foreach git submodule update
 git push
